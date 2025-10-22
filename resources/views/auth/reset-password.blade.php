@@ -24,6 +24,16 @@
             <!-- Form -->
             <div class="p-8">
                 @if($errors->any())
+                    <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <p class="font-semibold mb-2">Parol talablari:</p>
+                        <ul class="list-disc list-inside text-sm space-y-1">
+                            <li>Kamida 8 ta belgi</li>
+                            <li>Kamida bitta katta harf (A-Z)</li>
+                            <li>Kamida bitta kichik harf (a-z)</li>
+                            <li>Kamida bitta raqam (0-9)</li>
+                        </ul>
+                    </div>
                     <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
                         <i class="fas fa-exclamation-circle mr-2"></i>
                         <ul class="list-disc list-inside">

@@ -1,0 +1,204 @@
+# ============================================
+# Laravel Production Security Configuration
+# ============================================
+# Bu faylni public/.htaccess ga qo'shing yoki qo'shimcha qiling
+# Apache 2.4+ uchun optimallashtirilgan
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Force HTTPS (SSL o'rnatilgandan keyin izohni olib tashlang)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # Force www or non-www (birini tanlang)
+    # www qo'shish:
+    # RewriteCond %{HTTP_HOST} !^www\. [NC]
+    # RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [L,R=301]
+    
+    # www olib tashlash:
+    # RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    # RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+    
+    # Block access to .env file
+    RewriteRule ^\.env$ - [F,L]
+    RewriteRule ^\.env\..*$ - [F,L]
+    
+    # Block access to sensitive files and directories
+    RewriteRule ^(\.git|\.gitignore|\.gitattributes)$ - [F,L]
+    RewriteRule ^(composer\.(json|lock)|package\.json|package-lock\.json|yarn\.lock)$ - [F,L]
+    RewriteRule ^(phpunit\.xml|webpack\.mix\.js|artisan)$ - [F,L]
+    RewriteRule ^(README\.md|CHANGELOG\.md|LICENSE)$ - [F,L]
+    
+    # Block access to Laravel directories
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests)/.*$ - [F,L]
+    
+    # Block access to backup files
+    RewriteRule \.(bak|backup|old|orig|save|swp|tmp)$ - [F,L]
+</IfModule>
+
+# ============================================
+# Directory Security
+# ============================================
+
+# Disable directory listing
+Options -Indexes
+
+# Disable server signature
+ServerSignature Off
+
+# ============================================
+# File Access Control
+# ============================================
+
+# Prevent access to .env files
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Prevent access to composer files
+<FilesMatch "^(composer\.(json|lock)|package\.json)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent access to git files
+<FilesMatch "^\.git">
+    Require all denied
+</FilesMatch>
+
+# Prevent access to backup files
+<FilesMatch "\.(bak|backup|old|orig|save|swp|tmp)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent access to log files
+<FilesMatch "\.(log|txt)$">
+    Require all denied
+</FilesMatch>
+
+# Allow only specific file types
+<FilesMatch "\.(php|html|css|js|json|xml|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|pdf)$">
+    Require all granted
+</FilesMatch>
+
+# ============================================
+# Security Headers
+# ============================================
+
+<IfModule mod_headers.c>
+    # Remove server information
+    Header unset Server
+    Header unset X-Powered-By
+    
+    # Prevent clickjacking attacks
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Enable XSS protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (adjust based on your needs)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https:; connect-src 'self';"
+    
+    # Permissions Policy (formerly Feature Policy)
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+    
+    # Strict Transport Security (HTTPS o'rnatilgandan keyin izohni olib tashlang)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # Prevent caching of sensitive pages
+    <FilesMatch "\.(php)$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Enable caching for static assets
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|css|js|ico|woff|woff2|ttf|eot)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# ============================================
+# PHP Security Settings
+# ============================================
+
+<IfModule mod_php7.c>
+    # Disable dangerous PHP functions
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /path/to/php-error.log
+    
+    # Disable PHP information disclosure
+    php_flag expose_php Off
+    
+    # Session security
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 1
+    php_value session.use_only_cookies 1
+    php_value session.cookie_samesite Strict
+    
+    # File upload limits
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+# ============================================
+# Rate Limiting (mod_evasive required)
+# ============================================
+
+<IfModule mod_evasive20.c>
+    DOSHashTableSize 3097
+    DOSPageCount 5
+    DOSSiteCount 100
+    DOSPageInterval 1
+    DOSSiteInterval 1
+    DOSBlockingPeriod 60
+</IfModule>
+
+# ============================================
+# Compression
+# ============================================
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# ============================================
+# Error Pages
+# ============================================
+
+ErrorDocument 403 /403.html
+ErrorDocument 404 /404.html
+ErrorDocument 500 /500.html
+
+# ============================================
+# Additional Security
+# ============================================
+
+# Disable trace and track methods
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+    RewriteRule .* - [F]
+</IfModule>
+
+# Protect against SQL injection in URLs
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# Block common exploit attempts
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} (\.php|\.asp|\.aspx|\.jsp)\.$ [NC]
+    RewriteRule .* - [F,L]
+</IfModule>

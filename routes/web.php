@@ -21,9 +21,9 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-// Register routes
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+// Register routes - O'chirilgan (faqat admin foydalanuvchi qo'shadi)
+// Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+// Route::post('/register', [AuthController::class, 'register']);
 
 // Password Reset routes
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');

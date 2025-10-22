@@ -26,6 +26,21 @@
                 @if(session('success'))
                     <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
                         <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+                        
+                        @if(session('password_reset_url') && config('app.env') !== 'production')
+                            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded">
+                                <p class="text-sm font-semibold text-yellow-800 mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>Development Mode - Parolni tiklash havolasi:
+                                </p>
+                                <a href="{{ session('password_reset_url') }}" 
+                                   class="text-blue-600 hover:text-blue-800 underline break-all text-sm">
+                                    {{ session('password_reset_url') }}
+                                </a>
+                                <p class="text-xs text-yellow-700 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>Production da bu havola email orqali yuboriladi
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
