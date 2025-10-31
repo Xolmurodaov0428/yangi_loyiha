@@ -33,21 +33,18 @@ class PanelController extends Controller
         $selectedGroup = null;
 
         try {
-            $students = \App\Models\Student::where('supervisor_id', auth()->id())
+            // Show all students in supervisor's groups
+            $groups = auth()->user()?->groups()
+                ->withCount('students')
+                ->orderBy('name')
+                ->get();
+            
+            // Get all students from supervisor's groups
+            $groupIds = $groups->pluck('id')->toArray();
+            $students = \App\Models\Student::whereIn('group_id', $groupIds)
                 ->with(['organization'])
                 ->orderBy('full_name')
                 ->paginate(20);
-
-            $groups = auth()->user()?->groups()
-                ->withCount(['students as students_count' => function ($query) {
-                    $query->where('supervisor_id', auth()->id());
-                }])
-                ->with(['students' => function ($query) {
-                    $query->select('id', 'full_name', 'group_name', 'supervisor_id')
-                        ->where('supervisor_id', auth()->id());
-                }])
-                ->orderBy('name')
-                ->get();
         } catch (\Exception $e) {
             // Tables not ready yet
         }
@@ -67,20 +64,15 @@ class PanelController extends Controller
                 abort(403);
             }
 
-            $students = \App\Models\Student::where('supervisor_id', auth()->id())
-                ->where('group_id', $group->id)
+            // Show all students in this group
+            $students = \App\Models\Student::where('group_id', $group->id)
                 ->with(['organization'])
                 ->orderBy('full_name')
                 ->paginate(20);
 
+            // Get all supervisor's groups
             $groups = $user->groups()
-                ->withCount(['students as students_count' => function ($query) {
-                    $query->where('supervisor_id', auth()->id());
-                }])
-                ->with(['students' => function ($query) {
-                    $query->select('id', 'full_name', 'group_name', 'supervisor_id')
-                        ->where('supervisor_id', auth()->id());
-                }])
+                ->withCount('students')
                 ->orderBy('name')
                 ->get();
         } catch (\Exception $e) {
@@ -108,9 +100,7 @@ class PanelController extends Controller
         try {
             // Rahbarning barcha guruhlarini olish
             $groups = auth()->user()->groups()
-                ->withCount(['students as students_count' => function ($query) {
-                    $query->where('supervisor_id', auth()->id());
-                }])
+                ->withCount('students')  // Count all students in the group
                 ->orderBy('name')
                 ->get();
 
@@ -118,17 +108,20 @@ class PanelController extends Controller
             if ($selectedGroupId) {
                 $selectedGroup = \App\Models\Group::find($selectedGroupId);
                 if ($selectedGroup) {
-                    $students = \App\Models\Student::where('supervisor_id', auth()->id())
-                        ->where('group_id', $selectedGroupId)
+                    // Show all students in the group, not just those assigned to this supervisor
+                    $students = \App\Models\Student::where('group_id', $selectedGroupId)
                         ->with(['attendances' => function($q) use ($date) {
                             $q->whereDate('date', $date)
                               ->orderBy('session');
                         }])
                         ->get()
-                        ->map(function($student) use ($date) {
-                            // Har bir talaba uchun 3 ta seans yaratish
+                        ->map(function($student) use ($date, $selectedGroup) {
+                            // Get daily sessions from the group
+                            $dailySessions = $selectedGroup->daily_sessions ?? 3;
+                            
+                            // Create sessions based on group's daily_sessions setting
                             $sessions = [];
-                            for ($i = 1; $i <= 3; $i++) {
+                            for ($i = 1; $i <= $dailySessions; $i++) {
                                 $sessionKey = 'session_' . $i;
                                 $attendance = $student->attendances->where('session', $sessionKey)->first();
 
@@ -239,8 +232,30 @@ class PanelController extends Controller
 
     public function documents()
     {
-        // Placeholder: documents page
-        return view('supervisor.documents');
+        // Get the authenticated supervisor
+        $supervisor = auth()->user();
+        
+        // Get all students from supervisor's groups
+        $groupIds = $supervisor->groups()->pluck('groups.id');
+        $students = \App\Models\Student::whereIn('group_id', $groupIds)
+            ->with(['group', 'organization'])
+            ->orderBy('full_name')
+            ->paginate(20);
+            
+        return view('supervisor.documents', compact('students'));
+    }
+    
+    public function tasks()
+    {
+        // Get the authenticated supervisor
+        $supervisor = auth()->user();
+        
+        // Get groups that this supervisor is responsible for
+        $groups = $supervisor->groups()->with('students')->get();
+        
+        // You can add more logic here to get tasks related to these groups/students
+        
+        return view('supervisor.tasks', compact('groups'));
     }
 
     /**

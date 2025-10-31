@@ -108,7 +108,7 @@
                 <div class="card border-0 bg-light">
                   <div class="card-body">
                     @php
-                      $groups = \App\Models\Group::withCount('supervisors')->where('is_active', true)->get();
+                      $groups = \App\Models\Group::withCount(['supervisors', 'students'])->where('is_active', true)->get();
                     @endphp
                     @if($groups->count() > 0)
                       <div class="row g-3">

@@ -105,7 +105,7 @@
                 <span class="badge bg-primary">
                   <i class="fa fa-user me-1"></i>{{ $group->students_count }} talaba
                 </span>
-                @if($group->supervisors->count() > 0)
+                @if($group->supervisors && $group->supervisors->count() > 0)
                   <span class="badge bg-success">
                     <i class="fa fa-user-tie me-1"></i>{{ $group->supervisors->count() }} rahbar
                   </span>

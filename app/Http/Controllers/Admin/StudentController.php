@@ -21,45 +21,50 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        // Get all groups with student count
-        $groups = \App\Models\Group::withCount('students')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
         // If specific group selected, show students
         $selectedGroup = null;
         $students = collect();
         
         if ($request->filled('group')) {
-            $selectedGroup = \App\Models\Group::where('name', $request->group)->first();
-            
-            $query = Student::with('organization')
-                ->where('group_name', $request->group);
+            // Guruhni group_name bo'yicha topish
+            $group = \App\Models\Group::where('name', $request->group)->first();
 
-            // Search within group
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('full_name', 'like', "%{$search}%")
-                      ->orWhere('username', 'like', "%{$search}%");
-                });
+            if ($group) {
+                $selectedGroup = $group;
+                $query = Student::with('organization')
+                    ->where('group_id', $group->id);
+                    
+                // Search within group
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('full_name', 'like', "%{$search}%")
+                          ->orWhere('username', 'like', "%{$search}%");
+                    });
+                }
+
+                // Filter by organization
+                if ($request->filled('organization')) {
+                    $query->where('organization_id', $request->organization);
+                }
+
+                // Filter by status
+                if ($request->filled('status')) {
+                    $query->where('is_active', $request->status === 'active' ? 1 : 0);
+                }
+
+                $students = $query->orderBy('full_name')->paginate(15);
+            } else {
+                // Agar guruh topilmasa, bo'sh natija qaytarish
+                $students = collect();
             }
-
-            // Filter by organization
-            if ($request->filled('organization')) {
-                $query->where('organization_id', $request->organization);
-            }
-
-            // Filter by status
-            if ($request->filled('status')) {
-                $query->where('is_active', $request->status === 'active' ? 1 : 0);
-            }
-
-            $students = $query->orderBy('full_name')->paginate(15);
         }
 
         $organizations = Organization::where('is_active', true)->get();
+        $groups = \App\Models\Group::withCount('students')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('admin.students.index', compact('groups', 'students', 'selectedGroup', 'organizations'));
     }
@@ -70,7 +75,12 @@ class StudentController extends Controller
     public function create()
     {
         $organizations = Organization::where('is_active', true)->get();
-        return view('admin.students.create', compact('organizations'));
+        $groups = \App\Models\Group::where('is_active', true)
+            ->select('id', 'name', 'faculty')
+            ->distinct()
+            ->orderBy('name')
+            ->get();
+        return view('admin.students.create', compact('organizations', 'groups'));
     }
 
     /**
@@ -80,16 +90,24 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'group_name' => 'nullable|string|max:255',
-            'faculty' => 'nullable|string|max:255',
+            'group_id' => 'required|exists:groups,id',
             'username' => 'required|string|max:255|unique:students',
             'password' => 'required|string|min:6',
             'organization_id' => 'nullable|exists:organizations,id',
             'internship_start_date' => 'nullable|date',
             'internship_end_date' => 'nullable|date|after_or_equal:internship_start_date',
             'is_active' => 'boolean',
+        ], [
+            'group_id.required' => 'Guruhni tanlang',
+            'group_id.exists' => 'Tanlangan guruh mavjud emas',
         ]);
 
+        // Get group information
+        $group = \App\Models\Group::findOrFail($validated['group_id']);
+        
+        $validated['group_name'] = $group->name;
+        $validated['faculty'] = $group->faculty;
+        $validated['supervisor_id'] = null; // Rahbar hali tayinlanmagan
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
@@ -134,7 +152,12 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $organizations = Organization::where('is_active', true)->get();
-        return view('admin.students.edit', compact('student', 'organizations'));
+        $groups = \App\Models\Group::where('is_active', true)
+            ->select('id', 'name', 'faculty')
+            ->distinct()
+            ->orderBy('name')
+            ->get();
+        return view('admin.students.edit', compact('student', 'organizations', 'groups'));
     }
 
     /**
@@ -144,15 +167,23 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
-            'group_name' => 'nullable|string|max:255',
-            'faculty' => 'nullable|string|max:255',
+            'group_id' => 'required|exists:groups,id',
             'username' => ['required', 'string', 'max:255', Rule::unique('students')->ignore($student->id)],
             'password' => 'nullable|string|min:6',
             'organization_id' => 'nullable|exists:organizations,id',
             'internship_start_date' => 'nullable|date',
             'internship_end_date' => 'nullable|date|after_or_equal:internship_start_date',
             'is_active' => 'boolean',
+        ], [
+            'group_id.required' => 'Guruhni tanlang',
+            'group_id.exists' => 'Tanlangan guruh mavjud emas',
         ]);
+
+        // Get group information
+        $group = \App\Models\Group::findOrFail($validated['group_id']);
+        
+        $validated['group_name'] = $group->name;
+        $validated['faculty'] = $group->faculty;
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -161,6 +192,7 @@ class StudentController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
+        $validated['supervisor_id'] = $student->supervisor_id ?? null; // Eski qiymatini saqlash
 
         $student->update($validated);
 
@@ -255,6 +287,8 @@ class StudentController extends Controller
                         'internship_start_date' => $request->internship_start_date,
                         'internship_end_date' => $request->internship_end_date,
                         'is_active' => true,
+                        'group_id' => $group->id,
+                        'supervisor_id' => null, // Rahbar hali tayinlanmagan
                     ]);
 
                     $imported++;

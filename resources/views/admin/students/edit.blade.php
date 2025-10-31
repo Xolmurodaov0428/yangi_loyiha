@@ -27,7 +27,7 @@
 
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <form method="POST" action="{{ route('admin.students.update', $student) }}">
+          <form method="POST" action="{{ route('admin.students.update', $student) }}" id="studentForm">
             @csrf
             @method('PUT')
 
@@ -57,21 +57,29 @@
                 <small class="text-muted">Bo'sh qoldiring, agar o'zgartirmoqchi bo'lmasangiz</small>
               </div>
 
-              <!-- Group Name -->
-              <div class="col-md-6">
+              <!-- Group Selection -->
+              <!-- Group Selection -->
+              <div class="col-md-12">
                 <label class="form-label fw-semibold">
-                  <i class="fa fa-layer-group text-primary me-1"></i>Guruh nomi
+                  <i class="fa fa-layer-group text-primary me-1"></i>Guruh <span class="text-danger">*</span>
                 </label>
-                <input type="text" name="group_name" value="{{ old('group_name', $student->group_name) }}" class="form-control">
+                <select id="group_select" name="group_id" class="form-select" required>
+                  <option value="">Guruhni tanlang...</option>
+                  @foreach($groups as $group)
+                    <option value="{{ $group->id }}" 
+                            data-name="{{ $group->name }}" 
+                            data-faculty="{{ $group->faculty }}"
+                            {{ old('group_id', $student->group_id) == $group->id ? 'selected' : '' }}>
+                      {{ $group->name }} - {{ $group->faculty }}
+                    </option>
+                  @endforeach
+                </select>
+                <small class="text-muted">Agar kerakli guruh yo'q bo'lsa, avval Ma'lumotnoma bo'limidan guruh qo'shing</small>
               </div>
 
-              <!-- Faculty -->
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                  <i class="fa fa-building-columns text-primary me-1"></i>Fakultet
-                </label>
-                <input type="text" name="faculty" value="{{ old('faculty', $student->faculty) }}" class="form-control">
-              </div>
+              <!-- Hidden inputs for group_name and faculty -->
+              <input type="hidden" id="group_name_input" name="group_name" value="{{ old('group_name', $student->group_name) }}">
+              <input type="hidden" id="faculty_input" name="faculty" value="{{ old('faculty', $student->faculty) }}">
 
               <!-- Organization -->
               <div class="col-md-6">
@@ -134,3 +142,35 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const groupSelect = document.getElementById('group_select');
+    const groupNameInput = document.getElementById('group_name_input');
+    const facultyInput = document.getElementById('faculty_input');
+    
+    // Update hidden inputs when group is selected
+    if (groupSelect) {
+      groupSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption && selectedOption.value) {
+          // Update hidden inputs
+          groupNameInput.value = selectedOption.dataset.name || '';
+          facultyInput.value = selectedOption.dataset.faculty || '';
+        } else {
+          // Clear hidden inputs
+          groupNameInput.value = '';
+          facultyInput.value = '';
+        }
+      });
+      
+      // Trigger change if there's a selected value
+      if (groupSelect.value) {
+        groupSelect.dispatchEvent(new Event('change'));
+      }
+    }
+  });
+</script>
+@endpush

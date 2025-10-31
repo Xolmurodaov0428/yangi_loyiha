@@ -7,12 +7,31 @@ Tizimga faqat admin tomonidan tayinlangan foydalanuvchilar kirishi mumkin. Oddiy
 ## O'zgartirilgan fayllar
 
 ### 1. `resources/views/auth/login.blade.php`
-- ❌ "Ro'yxatdan o'tish" havolasi o'chirildi (120-127 qatorlar)
+- ❌ "Ro'yxatdan o'tish" havolasi o'chirildi (119-127 qatorlar)
+- ✅ Blade kommentlari `{{-- --}}` ishlatildi (HTML kommentlari emas!)
 - ✅ Login sahifasida faqat kirish formasi qoldi
 
-### 2. `routes/web.php`
-- ❌ Register route lari o'chirildi (25-26 qatorlar)
+### 2. `resources/views/welcome.blade.php`
+- ❌ Register havolasi o'chirildi (41-48 qatorlar)
+- ✅ Blade kommentlari `{{-- --}}` ishlatildi
+
+### 3. `routes/web.php`
+- ❌ Register route lari o'chirildi (24-26 qatorlar)
 - ✅ `/register` URL ga kirish imkoni yo'q
+
+## ⚠️ MUHIM: Blade kommentlari
+
+**Noto'g'ri (HTML kommentlari):**
+```blade
+<!-- {{ route('register') }} -->  ❌ Baribir ishga tushadi!
+```
+
+**To'g'ri (Blade kommentlari):**
+```blade
+{{-- {{ route('register') }} --}}  ✅ Ishga tushmaydi
+```
+
+**Sabab:** HTML kommentlari `<!-- -->` faqat HTML da ko'rinmaydi, lekin Blade kodi baribir server tomonida ishga tushadi. Blade kommentlari `{{-- --}}` esa butunlay ignore qilinadi.
 
 ## Foydalanuvchilarni qanday qo'shish kerak?
 

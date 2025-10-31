@@ -9,6 +9,7 @@ class Organization extends Model
     protected $fillable = [
         'name',
         'address',
+        'radius',
         'phone',
         'email',
         'is_active',

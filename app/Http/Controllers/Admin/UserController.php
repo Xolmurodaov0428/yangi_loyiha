@@ -38,7 +38,8 @@ class UserController extends Controller
             $query->where('is_active', $request->status === 'active' ? 1 : 0);
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(15);
+        // Load groups relationship for supervisors
+        $users = $query->with('groups')->orderBy('created_at', 'desc')->paginate(15);
 
         return view('admin.users.index', compact('users'));
     }
@@ -97,6 +98,9 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        // Load groups relationship for supervisors
+        $user->load('groups');
+        
         return view('admin.users.show', compact('user'));
     }
 

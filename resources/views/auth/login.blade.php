@@ -116,15 +116,15 @@
                     </button>
                 </form>
 
-                <!-- Register Link - O'chirilgan (faqat admin foydalanuvchi qo'shadi) -->
-                <!-- <div class="mt-6 text-center">
+                {{-- Register Link - O'chirilgan (faqat admin foydalanuvchi qo'shadi) --}}
+                {{-- <div class="mt-6 text-center">
                     <p class="text-gray-600">
                         Akkauntingiz yo'qmi? 
                         <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-semibold">
                             Ro'yxatdan o'tish
                         </a>
                     </p>
-                </div> -->
+                </div> --}}
             </div>
         </div>
 

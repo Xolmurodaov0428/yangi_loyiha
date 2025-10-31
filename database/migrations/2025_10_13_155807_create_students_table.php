@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('full_name');
             $table->string('group_name');
             $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
-            $table->foreignId('supervisor_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('supervisor_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('organization_id')->nullable()->constrained('organizations')->onDelete('set null');
             $table->boolean('is_active')->default(true);
             $table->timestamps();

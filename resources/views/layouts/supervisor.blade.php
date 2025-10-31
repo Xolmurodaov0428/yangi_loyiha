@@ -391,8 +391,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('supervisor.documents') ? 'active' : '' }}" href="{{ route('supervisor.documents') }}">
-                        <span class="link-ico"><i class="fa fa-file-alt"></i></span><span class="link-text">Hujjatlar</span>
+                    <a class="nav-link {{ request()->routeIs('supervisor.tasks*') ? 'active' : '' }}" href="{{ route('supervisor.tasks.index') }}">
+                        <span class="link-ico"><i class="fa fa-tasks"></i></span><span class="link-text">Topshiriqlar</span>
                     </a>
                 </li>
             </ul>
@@ -423,9 +423,9 @@
 
             <div class="sidebar-footer mt-auto small text-muted pt-3">
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-sm btn-outline-primary w-100" id="pinToggle" title="Pinni yoqish/o'chirish">
+                    <!-- <button class="btn btn-sm btn-outline-primary w-100" id="pinToggle" title="Pinni yoqish/o'chirish">
                         <i class="fa fa-thumbtack me-2"></i><span class="link-text">Menyuni mahkamlash</span>
-                    </button>
+                    </button> -->
                     <div class="text-center link-text" style="font-size:.75rem;">© {{ date('Y') }} Rahbar Panel</div>
                 </div>
             </div>

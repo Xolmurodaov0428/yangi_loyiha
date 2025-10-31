@@ -99,7 +99,7 @@
                 </label>
                   <div class="card-body">
                     @php
-                      $groups = \App\Models\Group::withCount('supervisors')->where('is_active', true)->get();
+                      $groups = \App\Models\Group::withCount(['supervisors', 'students'])->where('is_active', true)->get();
                       $userGroupIds = $user->groups->pluck('id')->toArray();
                     @endphp
                     @if($groups->count() > 0)

@@ -27,7 +27,7 @@
 
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-          <form method="POST" action="{{ route('admin.students.store') }}">
+          <form method="POST" action="{{ route('admin.students.store') }}" id="studentForm">
             @csrf
 
             <div class="row g-3">
@@ -57,22 +57,28 @@
                 <small class="text-muted">Kamida 6 ta belgi</small>
               </div>
 
-              <!-- Group Name -->
-              <div class="col-md-6">
+              <!-- Group Selection -->
+              <div class="col-md-12">
                 <label class="form-label fw-semibold">
-                  <i class="fa fa-layer-group text-primary me-1"></i>Guruh nomi
+                  <i class="fa fa-layer-group text-primary me-1"></i>Guruh <span class="text-danger">*</span>
                 </label>
-                <input type="text" name="group_name" value="{{ old('group_name') }}" class="form-control" placeholder="Masalan: IT-21">
+                <select id="group_select" name="group_id" class="form-select" required>
+                  <option value="">Guruhni tanlang...</option>
+                  @foreach($groups as $group)
+                    <option value="{{ $group->id }}" 
+                            data-name="{{ $group->name }}" 
+                            data-faculty="{{ $group->faculty }}"
+                            {{ old('group_id') == $group->id ? 'selected' : '' }}>
+                      {{ $group->name }} - {{ $group->faculty }}
+                    </option>
+                  @endforeach
+                </select>
+                <small class="text-muted">Agar kerakli guruh yo'q bo'lsa, avval Ma'lumotnoma bo'limidan guruh qo'shing</small>
               </div>
 
-              <!-- Faculty -->
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                  <i class="fa fa-building-columns text-primary me-1"></i>Fakultet
-                </label>
-                <input type="text" name="faculty" value="{{ old('faculty') }}" class="form-control" placeholder="Masalan: Informatika">
-              </div>
-
+              <!-- Hidden inputs for group_name and faculty -->
+              <input type="hidden" id="group_name_input" name="group_name" value="{{ old('group_name') }}">
+              <input type="hidden" id="faculty_input" name="faculty" value="{{ old('faculty') }}">
               <!-- Organization -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold">
@@ -93,7 +99,7 @@
                 <label class="form-label fw-semibold">
                   <i class="fa fa-calendar-check text-primary me-1"></i>Amaliyot boshlanishi
                 </label>
-                <input type="date" name="internship_start_date" value="{{ old('internship_start_date') }}" class="form-control">
+                <input type="date" id="internship_start_date" name="internship_start_date" value="{{ old('internship_start_date') }}" class="form-control">
               </div>
 
               <!-- Internship End Date -->
@@ -101,7 +107,8 @@
                 <label class="form-label fw-semibold">
                   <i class="fa fa-calendar-xmark text-primary me-1"></i>Amaliyot tugashi
                 </label>
-                <input type="date" name="internship_end_date" value="{{ old('internship_end_date') }}" class="form-control">
+                <input type="date" id="internship_end_date" name="internship_end_date" value="{{ old('internship_end_date') }}" class="form-control">
+                <small class="text-muted">Boshlanish sanasidan keyin bo'lishi kerak</small>
               </div>
 
               <!-- Active Status -->
@@ -149,3 +156,77 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('studentForm');
+    const groupSelect = document.getElementById('group_select');
+    const groupNameInput = document.getElementById('group_name_input');
+    const facultyInput = document.getElementById('faculty_input');
+    const startDateInput = document.getElementById('internship_start_date');
+    const endDateInput = document.getElementById('internship_end_date');
+    
+    // Update hidden inputs when group is selected
+    if (groupSelect) {
+      groupSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption && selectedOption.value) {
+          // Update hidden inputs
+          groupNameInput.value = selectedOption.dataset.name || '';
+          facultyInput.value = selectedOption.dataset.faculty || '';
+        } else {
+          // Clear hidden inputs
+          groupNameInput.value = '';
+          facultyInput.value = '';
+        }
+      });
+      
+      // Trigger change if there's an old value
+      if (groupSelect.value) {
+        groupSelect.dispatchEvent(new Event('change'));
+      }
+    }
+    
+    // Date validation
+    const validateDates = function() {
+      if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (endDate < startDate) {
+          endDateInput.setCustomValidity('Tugash sanasi boshlanish sanasidan keyin bo\'lishi kerak');
+          return false;
+        } else {
+          endDateInput.setCustomValidity('');
+          return true;
+        }
+      }
+      if (endDateInput) {
+        endDateInput.setCustomValidity('');
+      }
+      return true;
+    };
+    
+    // Add date listeners
+    if (startDateInput && endDateInput) {
+      startDateInput.addEventListener('change', validateDates);
+      endDateInput.addEventListener('change', validateDates);
+    }
+    
+    // Form validation
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        // Validate dates
+        if (!validateDates()) {
+          e.preventDefault();
+          return false;
+        }
+        
+        return true;
+      });
+    }
+  });
+</script>
+@endpush

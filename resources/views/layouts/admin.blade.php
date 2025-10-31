@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>@yield('title', 'Admin paneli')</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👤</text></svg>">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <style>
@@ -408,9 +409,13 @@
             </ul>
           </div>
         </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" href="#"><span class="link-ico"><i class="fa fa-building"></i></span><span class="link-text">Tashkilotlar</span></a>
-        </li>
+        {{-- Temporarily disabled --}}
+        {{-- <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs('admin.catalogs.organizations*') ? 'active' : '' }}" href="{{ route('admin.catalogs.organizations') }}">
+            <span class="link-ico"><i class="fa fa-building"></i></span>
+            <span class="link-text">Tashkilotlar</span>
+          </a>
+        </li> --}}
         <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#studentsMenu" role="button" aria-expanded="{{ request()->routeIs('admin.students.*') ? 'true' : 'false' }}" aria-controls="studentsMenu">
             <span class="link-ico"><i class="fa fa-graduation-cap"></i></span><span class="link-text">Talabalar</span>
@@ -427,11 +432,22 @@
           </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><span class="link-ico"><i class="fa fa-chart-line"></i></span><span class="link-text">Hisobotlar</span></a>
+          <a class="nav-link {{ request()->routeIs('admin.catalogs.*') ? 'active' : '' }}" data-bs-toggle="collapse" href="#catalogsMenu" role="button" aria-expanded="{{ request()->routeIs('admin.catalogs.*') ? 'true' : 'false' }}" aria-controls="catalogsMenu">
+            <span class="link-ico"><i class="fa fa-folder-tree"></i></span><span class="link-text">Ma'lumotnoma</span>
+            <i class="fa fa-chevron-down ms-auto small"></i>
+          </a>
+          <div class="collapse submenu {{ request()->routeIs('admin.catalogs.*') ? 'show' : '' }}" id="catalogsMenu">
+            <ul class="nav flex-column mt-1">
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.catalogs.groups') ? 'active' : '' }}" href="{{ route('admin.catalogs.groups') }}"><span class="link-ico"><i class="fa fa-users"></i></span><span class="link-text">Guruhlar</span></a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.catalogs.organizations') ? 'active' : '' }}" href="{{ route('admin.catalogs.organizations') }}"><span class="link-ico"><i class="fa fa-building"></i></span><span class="link-text">Tashkilotlar</span></a></li>
+              <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.catalogs.faculties') ? 'active' : '' }}" href="{{ route('admin.catalogs.faculties') }}"><span class="link-ico"><i class="fa fa-landmark"></i></span><span class="link-text">Fakultetlar</span></a></li>
+            </ul>
+          </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" href="{{ route('admin.messages.index') }}"><span class="link-ico"><i class="fa fa-envelope"></i></span><span class="link-text">Xabarlar</span></a>
+          <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><span class="link-ico"><i class="fa fa-chart-line"></i></span><span class="link-text">Hisobotlar</span></a>
         </li>
+        {{-- Messages menu removed --}}
         <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('admin.activity-logs') ? 'active' : '' }}" href="{{ route('admin.activity-logs') }}"><span class="link-ico"><i class="fa fa-history"></i></span><span class="link-text">Faoliyat Jurnali</span></a>
         </li>
@@ -514,6 +530,29 @@
         backdrop.style.display='none';
       }
     });
+
+    // Message count functionality has been removed
+
+    // Initial load
+    updateUnreadMessagesCount();
+    
+    // Refresh every 30 seconds (30000 milliseconds)
+    setInterval(updateUnreadMessagesCount, 30000);
   </script>
+  
+  <style>
+    @keyframes pulse {
+      0%, 100% {
+        transform: translate(-50%, 0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, 0) scale(1.1);
+        opacity: 0.9;
+      }
+    }
+  </style>
+  
+  @stack('scripts')
 </body>
 </html>

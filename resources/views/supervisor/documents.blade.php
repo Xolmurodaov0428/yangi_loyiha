@@ -36,50 +36,6 @@
                 <small class="text-muted">Talabalarni baholash uchun bu yerda forma va jadval bo'ladi</small>
             </div>
 
-            <!-- Future: Evaluations form and table -->
-            <!--
-            @if($students->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Talaba</th>
-                                <th>Amaliyot Davri</th>
-                                <th>Baho</th>
-                                <th>Izoh</th>
-                                <th>Sana</th>
-                                <th>Harakatlar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($students as $student)
-                                <tr>
-                                    <td>{{ $student->full_name }}</td>
-                                    <td>{{ $student->internship_start_date->format('d.m.Y') }} - {{ $student->internship_end_date->format('d.m.Y') }}</td>
-                                    <td>
-                                        <select class="form-select form-select-sm">
-                                            <option>5 (A'lo)</option>
-                                            <option>4 (Yaxshi)</option>
-                                            <option>3 (Qoniqarli)</option>
-                                            <option>2 (Qoniqarsiz)</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" placeholder="Izoh kiriting">
-                                    </td>
-                                    <td>{{ now()->format('d.m.Y') }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-success" title="Saqlash">
-                                            <i class="fa fa-save"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-            -->
         </div>
     </div>
 </div>

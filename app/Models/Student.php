@@ -3,15 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Student extends Model
+class Student extends Authenticatable
 {
+    use Notifiable;
+
     protected $fillable = [
         'full_name',
         'group_name',
         'group_id',
         'faculty',
         'username',
+        'password',
         'organization_id',
         'supervisor_id',
         'internship_start_date',
@@ -19,10 +24,16 @@ class Student extends Model
         'is_active',
     ];
 
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected $casts = [
         'internship_start_date' => 'date',
         'internship_end_date' => 'date',
         'is_active' => 'boolean',
+        'password' => 'hashed',
     ];
 
     public function organization()

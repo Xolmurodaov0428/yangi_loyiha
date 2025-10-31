@@ -94,6 +94,59 @@
 
                 <!-- Students Table and Location in same row -->
                 @if($selectedGroup)
+                    <!-- Attendance Sessions Info -->
+                    @php
+                        $dailySessions = $selectedGroup->daily_sessions ?? 3;
+                        // Session times based on number of daily sessions
+                        if ($dailySessions == 1) {
+                            $sessionTimes = [1 => '12:00'];
+                            $sessionDescription = 'Kuniga bir marta, soat 12:00 da davomat olinadi';
+                        } elseif ($dailySessions == 2) {
+                            $sessionTimes = [1 => '09:00', 2 => '15:00'];
+                            $sessionDescription = 'Kuniga ikki marta davomat olinadi';
+                        } elseif ($dailySessions == 3) {
+                            $sessionTimes = [1 => '09:00', 2 => '13:00', 3 => '16:00'];
+                            $sessionDescription = 'Kuniga uch marta davomat olinadi';
+                        } else {
+                            $sessionTimes = [1 => '09:00', 2 => '13:00', 3 => '16:00', 4 => '17:00'];
+                            $sessionDescription = 'Kuniga to\'rt marta davomat olinadi';
+                        }
+                    @endphp
+                    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body py-3">
+                            <div class="row align-items-center">
+                                <div class="col-lg-4 col-md-12 mb-3 mb-lg-0">
+                                    <div class="d-flex align-items-center text-white">
+                                        <div class="rounded-circle bg-white bg-opacity-25 p-3 me-3">
+                                            <i class="fa fa-calendar-check fs-3"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="mb-1 fw-bold">{{ $selectedGroup->name }}</h5>
+                                            <p class="mb-0 opacity-90 small">{{ $sessionDescription }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-8 col-md-12">
+                                    <div class="row g-2">
+                                        @for($i = 1; $i <= $dailySessions; $i++)
+                                            <div class="col-{{ $dailySessions == 1 ? '12' : ($dailySessions == 2 ? '6' : ($dailySessions == 3 ? '4' : '3')) }}">
+                                                <div class="card bg-white bg-opacity-25 border-0 text-white">
+                                                    <div class="card-body p-3 text-center">
+                                                        <div class="fs-5 fw-bold mb-1">{{ $i }}-Seans</div>
+                                                        <div class="d-flex align-items-center justify-content-center">
+                                                            <i class="fa fa-clock me-2"></i>
+                                                            <span class="fs-6">{{ $sessionTimes[$i] ?? '00:00' }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <!-- Students Table - Full Width -->
                         <div class="col-12">
@@ -119,9 +172,9 @@
                                                     <tr>
                                                         <th>Talaba</th>
                                                         <th>Guruh</th>
-                                                        <th>1-Seans<br><small class="text-muted">09:00</small></th>
-                                                        <th>2-Seans<br><small class="text-muted">13:00</small></th>
-                                                        <th>3-Seans<br><small class="text-muted">17:00</small></th>
+                                                        @for($i = 1; $i <= $dailySessions; $i++)
+                                                            <th>{{ $i }}-Seans<br><small class="text-muted">{{ $sessionTimes[$i] ?? '00:00' }}</small></th>
+                                                        @endfor
                                                         <th>Harakatlar</th>
                                                     </tr>
                                                 </thead>
@@ -141,7 +194,7 @@
                                                             </td>
                                                             <td>{{ $student->group_name }}</td>
 
-                                                            @for($i = 1; $i <= 3; $i++)
+                                                            @for($i = 1; $i <= $dailySessions; $i++)
                                                                 @php
                                                                     $sessionKey = 'session_' . $i;
                                                                     $session = $student->sessions[$sessionKey] ?? null;
@@ -247,9 +300,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Seans</label>
                         <select name="session" class="form-select" id="session_select" required>
-                            <option value="session_1">1-Seans (09:00)</option>
-                            <option value="session_2">2-Seans (13:00)</option>
-                            <option value="session_3">3-Seans (17:00)</option>
+                            <!-- Dynamically populated based on group's daily_sessions -->
                         </select>
                     </div>
                     <div class="mb-3">
@@ -758,6 +809,9 @@ function markAttendanceModal(studentId, date) {
     document.getElementById('modal_date').value = date;
     document.getElementById('modal_student_name').textContent = studentName;
     
+    // Populate session dropdown based on group's daily_sessions
+    populateSessionDropdown();
+    
     // Talabaning tashkilot ma'lumotlarini yuklash
     fetch(`/supervisor/students/${studentId}`)
         .then(response => response.json())
@@ -870,6 +924,34 @@ function confirmLocation() {
         const mapModal = bootstrap.Modal.getInstance(document.getElementById('mapPickerModal'));
         mapModal.hide();
     }
+}
+
+// Populate session dropdown based on group's daily_sessions
+function populateSessionDropdown() {
+    @if($selectedGroup)
+        const dailySessions = {{ $selectedGroup->daily_sessions ?? 3 }};
+        // Session times based on number of daily sessions
+        let sessionTimes = {};
+        if (dailySessions == 1) {
+            sessionTimes = {1: '12:00'};
+        } else if (dailySessions == 2) {
+            sessionTimes = {1: '09:00', 2: '15:00'};
+        } else if (dailySessions == 3) {
+            sessionTimes = {1: '09:00', 2: '13:00', 3: '16:00'};
+        } else {
+            sessionTimes = {1: '09:00', 2: '13:00', 3: '16:00', 4: '17:00'};
+        }
+        
+        const sessionSelect = document.getElementById('session_select');
+        sessionSelect.innerHTML = '';
+        
+        for (let i = 1; i <= dailySessions; i++) {
+            const option = document.createElement('option');
+            option.value = 'session_' + i;
+            option.textContent = i + '-Seans (' + (sessionTimes[i] || '00:00') + ')';
+            sessionSelect.appendChild(option);
+        }
+    @endif
 }
 </script>
 

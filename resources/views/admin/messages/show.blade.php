@@ -4,17 +4,17 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="mb-3">
+    <div class="mb-4">
         <a href="{{ route('admin.messages.index') }}" class="btn btn-outline-secondary">
             <i class="fa fa-arrow-left me-1"></i>Orqaga
         </a>
     </div>
 
-    <div class="row g-0" style="height: calc(100vh - 180px);">
+    <div class="row g-0" style="min-height: calc(100vh - 200px);">
         <!-- Chat Area -->
-        <div class="col-12 d-flex flex-column bg-light rounded shadow-sm">
+        <div class="col-12 d-flex flex-column bg-light rounded-3 shadow-sm" style="width: 100%; max-width: 1400px; margin: 0 auto;">
             <!-- Chat Header -->
-            <div class="bg-white border-bottom p-3 rounded-top">
+            <div class="bg-white border-bottom p-3 rounded-top-3">
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center">
@@ -48,6 +48,50 @@
             </div>
 
             <!-- Messages Area -->
+            <div class="flex-grow-1 overflow-auto p-3" style="max-height: 70vh;">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-lg-10 col-xl-8">
+                            <!-- Messages will be loaded here -->
+                            @foreach($messages as $message)
+                                <div class="message-item mb-3">
+                                    <div class="d-flex {{ $message->sender_type === 'App\\Models\\User' ? 'justify-content-end' : 'justify-content-start' }}">
+                                        <div class="message-bubble {{ $message->sender_type === 'App\\Models\\User' ? 'bg-primary text-white' : 'bg-white border' }} p-3 rounded-3" style="max-width: 90%;">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="fw-bold {{ $message->sender_type === 'App\\Models\\User' ? 'text-white-50' : 'text-muted' }}">
+                                                    {{ $message->sender->name ?? 'Foydalanuvchi' }}
+                                                </small>
+                                                <small class="ms-2 {{ $message->sender_type === 'App\\Models\\User' ? 'text-white-50' : 'text-muted' }}">
+                                                    {{ $message->created_at->format('H:i') }}
+                                                </small>
+                                            </div>
+                                            <div class="message-content">
+                                                {!! nl2br(e($message->message)) !!}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Input -->
+            <div class="bg-white border-top p-3 rounded-bottom-3">
+                <form action="{{ route('admin.messages.send', $conversation->id) }}" method="POST" class="d-flex">
+                    @csrf
+                    <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
+                    <div class="flex-grow-1 me-2">
+                        <div class="input-group">
+                            <input type="text" name="message" class="form-control border-end-0" placeholder="Xabar yozing..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
             <div class="flex-grow-1 overflow-auto p-4" id="messagesContainer" style="height: 0; background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);">
                 <div id="messagesList">
                     @forelse($messages as $message)
@@ -115,15 +159,59 @@
 </div>
 
 <style>
+/* Message styles */
 .message-item {
     animation: fadeIn 0.3s ease;
-    transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+.message-bubble {
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    word-wrap: break-word;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive adjustments */
+@media (min-width: 1400px) {
+    .message-bubble {
+        max-width: 70% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .message-bubble {
+        max-width: 90% !important;
+    }
+    
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-.delete-message-btn:hover {
     opacity: 1 !important;
 }
 </style>

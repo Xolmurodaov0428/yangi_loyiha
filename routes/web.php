@@ -12,6 +12,7 @@ use App\Http\Controllers\Supervisor\PanelController;
 use App\Http\Controllers\Supervisor\NotificationController;
 use App\Http\Controllers\Supervisor\ProfileController;
 use App\Http\Controllers\Supervisor\MessageController;
+use App\Http\Controllers\Supervisor\TaskController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -60,7 +61,7 @@ Route::middleware(['auth', Approved::class, AdminMiddleware::class])
         // Students
         Route::get('students/tasks', function() {
             return view('admin.students.tasks');
-        })->name('students.tasks');
+        })->name('admin.students.tasks');
         Route::get('students/import', [StudentController::class, 'showImport'])->name('students.import');
         Route::post('students/import', [StudentController::class, 'import'])->name('students.import.process');
         Route::get('students/attendance', [StudentController::class, 'attendance'])->name('students.attendance');
@@ -97,7 +98,38 @@ Route::middleware(['auth', Approved::class, AdminMiddleware::class])
         Route::post('settings/system', [\App\Http\Controllers\Admin\SettingsController::class, 'updateSystem'])->name('settings.system');
         Route::post('settings/telegram', [\App\Http\Controllers\Admin\SettingsController::class, 'updateTelegram'])->name('settings.telegram');
         Route::post('settings/backup', [\App\Http\Controllers\Admin\SettingsController::class, 'backup'])->name('settings.backup');
+
+        // Tasks
+        Route::resource('tasks', \App\Http\Controllers\Admin\TaskController::class);
+
+        // Ma'lumotnoma (Catalogs)
+        Route::prefix('catalogs')->name('catalogs.')->group(function () {
+            Route::get('/groups', [\App\Http\Controllers\Admin\CatalogController::class, 'groups'])->name('groups');
+            Route::post('/groups', [\App\Http\Controllers\Admin\CatalogController::class, 'storeGroup'])->name('groups.store');
+            Route::post('/groups/import', [\App\Http\Controllers\Admin\CatalogController::class, 'importGroups'])->name('groups.import');
+            Route::get('/groups/template', [\App\Http\Controllers\Admin\CatalogController::class, 'downloadGroupsTemplate'])->name('groups.template');
+            Route::put('/groups/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'updateGroup'])->name('groups.update');
+            Route::delete('/groups/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'deleteGroup'])->name('groups.delete');
+            Route::post('/groups/{id}/toggle', [\App\Http\Controllers\Admin\CatalogController::class, 'toggleGroup'])->name('groups.toggle');
+
+            Route::get('/organizations', [\App\Http\Controllers\Admin\CatalogController::class, 'organizations'])->name('organizations');
+            Route::post('/organizations', [\App\Http\Controllers\Admin\CatalogController::class, 'storeOrganization'])->name('organizations.store');
+            Route::post('/organizations/import', [\App\Http\Controllers\Admin\CatalogController::class, 'importOrganizations'])->name('organizations.import');
+            Route::get('/organizations/template', [\App\Http\Controllers\Admin\CatalogController::class, 'downloadOrganizationsTemplate'])->name('organizations.template');
+            Route::get('/organizations/{id}/students', [\App\Http\Controllers\Admin\CatalogController::class, 'organizationStudents'])->name('organizations.students');
+            Route::put('/organizations/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'updateOrganization'])->name('organizations.update');
+            Route::delete('/organizations/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'deleteOrganization'])->name('organizations.delete');
+
+            Route::get('/faculties', [\App\Http\Controllers\Admin\CatalogController::class, 'faculties'])->name('faculties');
+            Route::post('/faculties', [\App\Http\Controllers\Admin\CatalogController::class, 'storeFaculty'])->name('faculties.store');
+            Route::post('/faculties/import', [\App\Http\Controllers\Admin\CatalogController::class, 'importFaculties'])->name('faculties.import');
+            Route::get('/faculties/template', [\App\Http\Controllers\Admin\CatalogController::class, 'downloadFacultiesTemplate'])->name('faculties.template');
+            Route::put('/faculties/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'updateFaculty'])->name('faculties.update');
+            Route::delete('/faculties/{id}', [\App\Http\Controllers\Admin\CatalogController::class, 'deleteFaculty'])->name('faculties.delete');
+        });
     });
+
+
 
 // Supervisor routes
 Route::middleware(['auth', Approved::class, SupervisorMiddleware::class])
@@ -114,6 +146,12 @@ Route::middleware(['auth', Approved::class, SupervisorMiddleware::class])
         Route::get('/students/{student}', [PanelController::class, 'showStudent'])->name('students.show');
         Route::get('/evaluations', [PanelController::class, 'evaluations'])->name('evaluations');
         Route::get('/documents', [PanelController::class, 'documents'])->name('documents');
+        // Tasks resource routes
+        Route::resource('tasks', TaskController::class);
+        
+        // Additional routes for tasks
+        Route::post('tasks/{task}/submit', [TaskController::class, 'submit'])->name('tasks.submit');
+        Route::post('tasks/{task}/evaluate', [TaskController::class, 'evaluate'])->name('tasks.evaluate');
         
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -149,15 +187,7 @@ Route::prefix('supervisor')->group(function () {
 
 // Admin routes
 Route::prefix('admin')->middleware(['auth', AdminMiddleware::class])->group(function () {
-    // Messages
-    Route::get('/messages', [\App\Http\Controllers\Admin\MessageController::class, 'index'])->name('admin.messages.index');
-    Route::get('/messages/{conversation}', [\App\Http\Controllers\Admin\MessageController::class, 'show'])->name('admin.messages.show');
-    Route::get('/messages/{conversation}/get', [\App\Http\Controllers\Admin\MessageController::class, 'getMessages'])->name('admin.messages.get');
-    Route::delete('/messages/{message}', [\App\Http\Controllers\Admin\MessageController::class, 'destroy'])->name('admin.messages.destroy');
-    
-    // Message Logs
-    Route::get('/message-logs', [\App\Http\Controllers\Admin\MessageLogController::class, 'index'])->name('admin.message-logs.index');
-    Route::get('/message-logs/{id}', [\App\Http\Controllers\Admin\MessageLogController::class, 'show'])->name('admin.message-logs.show');
+    // Messages and Message Logs have been removed
     
     // API Tokens
     Route::get('/api-tokens', [\App\Http\Controllers\Admin\ApiTokenController::class, 'index'])->name('admin.api-tokens.index');

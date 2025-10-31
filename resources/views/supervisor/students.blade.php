@@ -145,9 +145,9 @@
                                             <a href="{{ route('supervisor.messages.show', $student->id) }}" class="btn btn-sm btn-outline-primary" title="Chat">
                                                 <i class="fa fa-comments"></i>
                                             </a>
-                                            <a href="{{ route('supervisor.attendance') }}?student_id={{ $student->id }}" class="btn btn-sm btn-outline-info" title="Davomat">
+                                            <button type="button" class="btn btn-sm btn-outline-info" title="Davomat" onclick="viewStudentAttendance({{ $student->id }}, '{{ addslashes($student->full_name) }}')">
                                                 <i class="fa fa-clipboard-check"></i>
-                                            </a>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -173,6 +173,36 @@
         </div>
     </div>
     
+</div>
+
+<!-- Student Attendance Modal -->
+<div class="modal fade" id="studentAttendanceModal" tabindex="-1" aria-labelledby="studentAttendanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="studentAttendanceModalLabel">
+                    <i class="fa fa-user-graduate me-2 text-primary"></i>
+                    <span id="detail_student_name"></span> - Davomat tarixi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="attendanceHistoryContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Yuklanmoqda...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Ma'lumotlar yuklanmoqda...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa fa-times me-1"></i>Yopish
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Group Message Modal -->
@@ -221,6 +251,155 @@
 @endif
 
 <script>
+// View student attendance history
+function viewStudentAttendance(studentId, studentName) {
+    console.log('Viewing attendance for student:', studentId);
+
+    // Set modal title
+    document.getElementById('detail_student_name').textContent = studentName;
+    
+    // Open modal
+    const modal = new bootstrap.Modal(document.getElementById('studentAttendanceModal'));
+    modal.show();
+    
+    // Fetch attendance history
+    const historyUrlTemplate = "{{ route('supervisor.students.attendance.history', ['studentId' => 'STUDENT_ID_PLACEHOLDER']) }}";
+    const historyUrl = historyUrlTemplate.replace('STUDENT_ID_PLACEHOLDER', encodeURIComponent(studentId));
+    
+    fetch(historyUrl, {
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.message || 'Ma\'lumot yuklanmadi');
+        }
+        
+        let html = '';
+        
+        if (data.attendances && data.attendances.length > 0) {
+            html = `
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sana</th>
+                                <th>Seans</th>
+                                <th>Holat</th>
+                                <th>Kelish vaqti</th>
+                                <th>Ketish vaqti</th>
+                                <th>Izoh</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.attendances.forEach(att => {
+                const statusBadge = att.status === 'present' ? 
+                    '<span class="badge bg-success"><i class="fa fa-check me-1"></i>Keldi</span>' :
+                    att.status === 'late' ?
+                    '<span class="badge bg-warning"><i class="fa fa-clock me-1"></i>Kech</span>' :
+                    att.status === 'excused' ?
+                    '<span class="badge bg-info"><i class="fa fa-file-medical me-1"></i>Sababli</span>' :
+                    '<span class="badge bg-danger"><i class="fa fa-times me-1"></i>Kelmadi</span>';
+                
+                const sessionName = att.session === 'session_1' ? '1-Seans' :
+                                   att.session === 'session_2' ? '2-Seans' :
+                                   att.session === 'session_3' ? '3-Seans' :
+                                   '4-Seans';
+                
+                const checkInTime = att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'}) : '<span class="text-muted">-</span>';
+                const checkOutTime = att.check_out_time ? new Date(att.check_out_time).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'}) : '<span class="text-muted">-</span>';
+                
+                html += `
+                    <tr>
+                        <td>${att.date_formatted}</td>
+                        <td>${sessionName}</td>
+                        <td>${statusBadge}</td>
+                        <td>${checkInTime}</td>
+                        <td>${checkOutTime}</td>
+                        <td>${att.notes || '<span class="text-muted">-</span>'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="card border-0 bg-success bg-opacity-10">
+                                <div class="card-body py-2">
+                                    <h5 class="mb-0 text-success">${data.stats.present}</h5>
+                                    <small class="text-muted">Keldi</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="card border-0 bg-danger bg-opacity-10">
+                                <div class="card-body py-2">
+                                    <h5 class="mb-0 text-danger">${data.stats.absent}</h5>
+                                    <small class="text-muted">Kelmadi</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="card border-0 bg-warning bg-opacity-10">
+                                <div class="card-body py-2">
+                                    <h5 class="mb-0 text-warning">${data.stats.late}</h5>
+                                    <small class="text-muted">Kech</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="card border-0 bg-info bg-opacity-10">
+                                <div class="card-body py-2">
+                                    <h5 class="mb-0 text-info">${data.stats.percentage}%</h5>
+                                    <small class="text-muted">Davomat</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html = `
+                <div class="text-center py-5">
+                    <i class="fa fa-clipboard-list fs-1 text-muted opacity-25 mb-3"></i>
+                    <h5 class="text-muted">Davomat tarixi topilmadi</h5>
+                    <p class="text-muted mb-0">Bu talaba uchun hali davomat belgilanmagan</p>
+                </div>
+            `;
+        }
+        
+        document.getElementById('attendanceHistoryContent').innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="text-center py-5">
+                <i class="fa fa-exclamation-triangle fs-1 text-danger opacity-25 mb-3"></i>
+                <h5 class="text-danger">Xatolik yuz berdi</h5>
+                <p class="text-muted mb-0">Ma'lumotlarni yuklashda xatolik yuz berdi</p>
+                <small class="text-danger">${error.message || 'Noma\'lum xatolik'}</small>
+            </div>
+        `;
+    });
+}
+
 @if($selectedGroup)
 document.addEventListener('DOMContentLoaded', function() {
     const groupMessageForm = document.getElementById('groupMessageForm');
