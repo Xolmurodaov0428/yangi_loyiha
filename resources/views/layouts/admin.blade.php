@@ -444,6 +444,14 @@
             </ul>
           </div>
         </li>
+
+
+         <li class="nav-item">
+          <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><span class="link-ico"><i class="fa fa-chart-line"></i></span><span class="link-text">Talabalar</span></a>
+        </li>
+          
+
+
         <li class="nav-item">
           <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><span class="link-ico"><i class="fa fa-chart-line"></i></span><span class="link-text">Hisobotlar</span></a>
         </li>

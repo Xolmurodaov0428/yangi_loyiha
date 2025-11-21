@@ -43,6 +43,18 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        'sqlite_secondary' => [
+            'driver' => 'sqlite',
+            'url' => env('DB_SECONDARY_URL'),
+            'database' => env('DB_SECONDARY_DATABASE', database_path('database_secondary.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
+            'busy_timeout' => null,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

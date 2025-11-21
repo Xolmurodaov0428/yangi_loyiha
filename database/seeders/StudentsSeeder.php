@@ -42,6 +42,7 @@ class StudentsSeeder extends Seeder
                         'group_name' => $studentData['group_name'],
                         'group_id' => $group->id,
                         'supervisor_id' => $supervisor->id,
+                        'password' => bcrypt('password'),
                         'is_active' => true,
                     ]
                 );

@@ -61,7 +61,7 @@ Route::middleware(['auth', Approved::class, AdminMiddleware::class])
         // Students
         Route::get('students/tasks', function() {
             return view('admin.students.tasks');
-        })->name('admin.students.tasks');
+        })->name('students.tasks');
         Route::get('students/import', [StudentController::class, 'showImport'])->name('students.import');
         Route::post('students/import', [StudentController::class, 'import'])->name('students.import.process');
         Route::get('students/attendance', [StudentController::class, 'attendance'])->name('students.attendance');
