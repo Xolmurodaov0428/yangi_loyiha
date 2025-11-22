@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AuthController;
 use App\Http\Middleware\Approved;
 use App\Http\Middleware\Admin as AdminMiddleware;
@@ -105,6 +106,18 @@ Route::middleware(['auth', Approved::class, AdminMiddleware::class])
         // Ma'lumotnoma (Catalogs)
         Route::prefix('catalogs')->name('catalogs.')->group(function () {
             Route::get('/groups', [\App\Http\Controllers\Admin\CatalogController::class, 'groups'])->name('groups');
+            Route::get('/student-groups', function() {
+                $student_login = DB::table('student_login')
+                    ->where('is_active', 1)
+                    ->orderBy('full_name')
+                    ->get();
+                return view('admin.student-groups', compact('student_login'));
+            })->name('student-groups');
+            
+            Route::get('/test-students', function() {
+                $student_login = \App\Models\Student::orderBy('full_name')->paginate(20);
+                return view('admin.test-students', compact('student_login'));
+            });
             Route::post('/groups', [\App\Http\Controllers\Admin\CatalogController::class, 'storeGroup'])->name('groups.store');
             Route::post('/groups/import', [\App\Http\Controllers\Admin\CatalogController::class, 'importGroups'])->name('groups.import');
             Route::get('/groups/template', [\App\Http\Controllers\Admin\CatalogController::class, 'downloadGroupsTemplate'])->name('groups.template');
